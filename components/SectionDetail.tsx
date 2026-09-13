@@ -95,13 +95,13 @@ export default function SectionDetail({
 
       {item.image && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <div className="relative w-full h-64 sm:h-80 rounded-xl overflow-hidden bg-slate-100">
+          <div className="relative w-full h-64 sm:h-80 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
             <Image
               src={item.image}
               alt={item.imageAlt || item.title}
               fill
               sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
+              className="object-contain"
               priority
             />
           </div>
