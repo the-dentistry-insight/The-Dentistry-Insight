@@ -104,13 +104,13 @@ function PlainGrid({
           >
             <Link href={`/${folder}/${item.slug}/`} className="block flex-1">
               {item.image && (
-                <div className="relative w-full h-36 bg-slate-100">
+                <div className="relative w-full h-36 bg-slate-100 flex items-center justify-center">
                   <Image
                     src={item.image}
                     alt={item.imageAlt || item.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </div>
               )}
