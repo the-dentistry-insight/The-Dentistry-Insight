@@ -28,7 +28,10 @@
   .alert{margin-top:1rem;padding:.65rem .9rem;border-radius:.5rem;font-size:.75rem;font-weight:600;display:none;}
   .alert.error{background:#fff1f2;color:#e11d48;display:block;}
   .alert.success{background:#ecfdf5;color:#059669;display:block;}
-  .back-link{display:block;text-align:center;margin-top:1.5rem;font-size:.75rem;color:#94a3b8;text-decoration:none;}
+  .switch-row{text-align:center;margin-top:1.5rem;font-size:.8rem;color:#64748b;}
+  .switch-row a{color:#0056b3;font-weight:700;text-decoration:none;}
+  .switch-row a:hover{text-decoration:underline;}
+  .back-link{display:block;text-align:center;margin-top:1rem;font-size:.75rem;color:#94a3b8;text-decoration:none;}
   .back-link:hover{color:#0056b3;}
 </style>
 </head>
@@ -49,7 +52,10 @@
       <div id="alertBox" class="alert"></div>
     </form>
 
-    <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i>&nbsp; Back to The Dentistry Insight</a>
+    <div class="switch-row">
+      New here? <a href="/signup.html">Create an account</a>
+    </div>
+    <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i>&nbsp; Continue without an account</a>
   </div>
 
 <script>
@@ -76,13 +82,19 @@
     alertBox.className = 'alert';
     btnText.innerHTML = '<span class="spinner"></span>';
 
+    // shouldCreateUser:false — this page is for RETURNING members only.
+    // First-time visitors are directed to signup.html instead, which
+    // collects their profile info before creating the account.
     const { error } = await supabaseClient.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true }
+      options: { shouldCreateUser: false }
     });
 
     if (error) {
-      showAlert(error.message, 'error');
+      const msg = error.message.toLowerCase().includes('signups not allowed')
+        ? "No account found for this email — please sign up first."
+        : error.message;
+      showAlert(msg, 'error');
       btn.disabled = false;
       btnText.textContent = 'Send 6-digit code';
       return;
