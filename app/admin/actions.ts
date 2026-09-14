@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { SECTIONS, type SectionKey } from "@/lib/sections";
 import { getSupabaseSessionClient } from "@/lib/supabase-session";
+import { submitToIndexNow } from "@/lib/indexnow";
+
+const SITE_URL = "https://www.thedentistryinsight.com";
 
 function slugify(str: string): string {
   return (str || "")
@@ -47,6 +50,8 @@ export async function saveRecord(formData: FormData) {
   }
   fields.slug = slug;
 
+  const indexNowUrls: string[] = [];
+
   if (id) {
     // Editing an existing record — if the slug changed, record a 301
     // redirect from the old published URL to the new one (spec §3).
@@ -56,6 +61,13 @@ export async function saveRecord(formData: FormData) {
       await supabase
         .from("url_redirects")
         .upsert({ from_path: fromPath, to_path: toPath }, { onConflict: "from_path" });
+
+      // Both the old (now-redirecting) URL and the new live URL matter to IndexNow.
+      if (fields.status === "published") {
+        indexNowUrls.push(`${SITE_URL}${fromPath}`, `${SITE_URL}${toPath}`);
+      }
+    } else if (fields.status === "published") {
+      indexNowUrls.push(`${SITE_URL}/${config.folder}/${slug}/`);
     }
 
     const { error } = await supabase.from(config.table).update(fields).eq("id", id);
@@ -74,6 +86,17 @@ export async function saveRecord(formData: FormData) {
 
     const { error } = await supabase.from(config.table).insert(fields);
     if (error) throw new Error(error.message);
+
+    if (fields.status === "published") {
+      indexNowUrls.push(`${SITE_URL}/${config.folder}/${slug}/`);
+    }
+  }
+
+  // Fire-and-forget: never let IndexNow being slow/down block the actual save.
+  if (indexNowUrls.length > 0) {
+    submitToIndexNow(indexNowUrls).catch((err) =>
+      console.error("IndexNow submission failed silently:", err)
+    );
   }
 
   revalidatePath(`/${config.folder}`);
