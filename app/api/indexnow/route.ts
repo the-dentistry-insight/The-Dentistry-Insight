@@ -4,7 +4,9 @@ import { submitToIndexNow } from "@/lib/indexnow";
 export async function POST(request: Request) {
   try {
     const payload = await request.json().catch(() => null);
-    const urls = Array.isArray(payload?.urls) ? payload.urls.filter((u) => typeof u === "string") : [];
+    const urls = Array.isArray(payload?.urls)
+      ? payload.urls.filter((u: unknown): u is string => typeof u === "string")
+      : [];
 
     if (!urls.length) {
       return NextResponse.json({ success: false, error: "No urls provided" }, { status: 400 });
