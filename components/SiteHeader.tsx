@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { href: "/contact/", label: "Contact Us" },
 ];
 
-const LOGIN_LINK = { href: "/login.html", label: "Login" };
+const LOGIN_LINK = { href: "/login", label: "Login" };
 
 export default function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,12 +50,8 @@ export default function SiteHeader() {
                 className="h-14 sm:h-16 w-auto object-contain transition-transform group-hover:scale-105"
               />
               <div className="flex flex-col border-l-2 border-slate-200 pl-4">
-                <span className="text-lg sm:text-xl font-black text-adaNavy tracking-tight leading-none">
-                  The Dentistry Insight
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 mt-1 tracking-wider uppercase">
-                  Dental Careers & Resources
-                </span>
+                <span className="text-lg sm:text-xl font-black text-adaNavy tracking-tight leading-none">The Dentistry Insight</span>
+                <span className="text-[10px] font-semibold text-slate-400 mt-1 tracking-wider uppercase">Dental Careers & Resources</span>
               </div>
             </Link>
 
