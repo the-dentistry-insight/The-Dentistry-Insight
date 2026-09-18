@@ -2,7 +2,7 @@ import { SECTIONS, getPublishedList } from "@/lib/sections";
 import { buildHubMetadata } from "@/lib/seo";
 import SectionHub from "@/components/SectionHub";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const section = SECTIONS.workshop;
 
