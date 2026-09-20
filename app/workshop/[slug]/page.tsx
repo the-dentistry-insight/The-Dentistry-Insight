@@ -13,7 +13,7 @@ import {
 import SectionDetail from "@/components/SectionDetail";
 import JsonLd from "@/components/JsonLd";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const section = SECTIONS.workshop;
 
