@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SECTIONS, getPublishedList } from "@/lib/sections";
 
-export const revalidate = 300; // ISR: refresh every 5 minutes
+export const revalidate = 3600; // ISR: refresh every 1 hour
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
