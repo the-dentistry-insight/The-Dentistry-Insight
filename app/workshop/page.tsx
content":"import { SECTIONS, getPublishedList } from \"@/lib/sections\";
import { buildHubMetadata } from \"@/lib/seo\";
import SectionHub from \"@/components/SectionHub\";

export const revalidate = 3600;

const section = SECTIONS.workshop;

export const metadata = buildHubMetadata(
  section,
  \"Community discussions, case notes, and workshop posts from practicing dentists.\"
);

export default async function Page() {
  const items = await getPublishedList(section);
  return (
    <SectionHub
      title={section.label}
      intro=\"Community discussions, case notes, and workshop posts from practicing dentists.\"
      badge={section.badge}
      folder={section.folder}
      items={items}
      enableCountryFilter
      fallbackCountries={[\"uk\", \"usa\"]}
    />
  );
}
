@@ -1,0 +1,331 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { SECTIONS, getPublishedList } from "@/lib/sections";
+import HomepageCountryPreview from "@/components/HomepageCountryPreview";
+
+export const revalidate = 3600; // ISR: refresh every 1 hour
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+function formatDate(d: string | null) {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default async function HomePage() {
+  // Fetch a wider pool than we show, so the geo-filter has enough of each
+  // country to pick from instead of just whatever's newest overall.
+  const jobsPool = await getPublishedList(SECTIONS.jobs, 30);
+  const workshopPool = await getPublishedList(SECTIONS.workshop, 30);
+  const exams = await getPublishedList(SECTIONS.exams, 6);
+
+  return (
+    <>
+      {/* HERO — ported 1:1 from index.html */}
+      <section className="relative bg-adaNavy text-white overflow-hidden py-16 lg:py-24 hero-bg-accent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="text-xs uppercase tracking-widest font-black text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-full inline-block mb-6">
+              Dentist Hub
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight mb-6">
+              What is <br />
+              <span className="text-rose-400">The Dentistry Insight?</span>
+            </h1>
+            <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-8">
+              The Dentistry Insight is a growing dentist platform, posting
+              dental jobs, blogs, community posts, market listings, and
+              licensing exam resources for dental professionals worldwide.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/jobs/"
+                className="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition shadow-lg shadow-rose-900/30 text-sm"
+              >
+                Explore Dental Jobs
+              </Link>
+              <Link
+                href="/market/"
+                className="px-6 py-3 bg-adaBlue hover:bg-blue-700 text-white font-bold rounded-lg transition text-sm shadow-md"
+              >
+                Browse Dental Market
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QUICK CATEGORY BOXES — one-click entry into each section */}
+      <section className="py-12 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <Link
+              href="/jobs/"
+              className="group bg-adaNavy text-white rounded-xl p-6 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-xl transition-all"
+            >
+              <div className="w-14 h-14 rounded-full bg-rose-500/15 flex items-center justify-center text-rose-400 text-2xl mb-4 group-hover:bg-rose-500/25 transition">
+                <i className="fa-solid fa-briefcase" />
+              </div>
+              <h3 className="text-sm font-black">Dental Jobs</h3>
+              <p className="text-[11px] text-slate-300 mt-1">
+                Verified openings worldwide
+              </p>
+            </Link>
+
+            <Link
+              href="/workshop/"
+              className="group bg-white border border-slate-200/80 rounded-xl p-6 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-xl transition-all"
+            >
+              <div className="w-14 h-14 rounded-full bg-adaSoftBlue flex items-center justify-center text-adaBlue text-2xl mb-4 group-hover:bg-blue-100 transition">
+                <i className="fa-solid fa-chalkboard-user" />
+              </div>
+              <h3 className="text-sm font-black text-slate-900">
+                Dental Webinar
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Free CPD workshops &amp; resources
+              </p>
+            </Link>
+
+            <Link
+              href="/exams/"
+              className="group bg-white border border-slate-200/80 rounded-xl p-6 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-xl transition-all"
+            >
+              <div className="w-14 h-14 rounded-full bg-adaSoftBlue flex items-center justify-center text-adaBlue text-2xl mb-4 group-hover:bg-blue-100 transition">
+                <i className="fa-solid fa-graduation-cap" />
+              </div>
+              <h3 className="text-sm font-black text-slate-900">
+                Licensing Exams
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Guides, MCQs &amp; one-liners
+              </p>
+            </Link>
+
+            <Link
+              href="/market/"
+              className="group bg-white border border-slate-200/80 rounded-xl p-6 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-xl transition-all"
+            >
+              <div className="w-14 h-14 rounded-full bg-adaSoftBlue flex items-center justify-center text-adaBlue text-2xl mb-4 group-hover:bg-blue-100 transition">
+                <i className="fa-solid fa-kit-medical" />
+              </div>
+              <h3 className="text-sm font-black text-slate-900">
+                Dental Material
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Buy, sell &amp; trade equipment
+              </p>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* JOBS — geo-filtered to the visitor's country (falls back to newest
+          overall if their country has fewer than 3 open listings). */}
+      <section id="jobs-section" className="py-16 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <div className="text-xs font-bold tracking-widest text-adaBlue uppercase mb-2">
+                Latest Openings
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Dental Jobs
+              </h2>
+            </div>
+            <Link
+              href="/jobs/"
+              className="text-sm font-bold text-adaBlue hover:underline"
+            >
+              View all jobs &rarr;
+            </Link>
+          </div>
+
+          {jobsPool.length === 0 ? (
+            <p className="text-sm text-slate-400">No listings yet.</p>
+          ) : (
+            <HomepageCountryPreview
+              pool={jobsPool}
+              folder="jobs"
+              badgeLabel="Job Opening"
+            />
+          )}
+        </div>
+      </section>
+
+      {/* EXAMS */}
+      <section id="exams-section" className="py-16 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <div className="text-xs font-bold tracking-widest text-adaBlue uppercase mb-2">
+                Certification Guides
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Licensing Exams
+              </h2>
+            </div>
+            <Link
+              href="/exams/"
+              className="text-sm font-bold text-adaBlue hover:underline"
+            >
+              View all exams &rarr;
+            </Link>
+          </div>
+
+          {exams.length === 0 ? (
+            <p className="text-sm text-slate-400">No exams yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {exams.map((exam) => {
+                const isWhatsApp = exam.ctaHref?.includes("wa.me");
+                const isMailto = exam.ctaHref?.startsWith("mailto:");
+                return (
+                  <div
+                    key={exam.id}
+                    className="bg-white border border-slate-200/80 rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col"
+                  >
+                    <Link href={`/exams/${exam.slug}/`} className="block p-5 pb-3 flex-1">
+                      <span className="px-2.5 py-1 bg-blue-50 text-adaBlue text-[9px] font-extrabold uppercase rounded-full tracking-wider">
+                        Licensing Exam
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 mt-2">
+                        {exam.title}
+                      </h3>
+                      {exam.subtitle && (
+                        <p className="text-xs text-slate-500 font-semibold mt-1">
+                          {exam.subtitle}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-400 mt-2 line-clamp-3">
+                        {exam.summary}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-3">
+                        {formatDate(exam.createdAt)}
+                      </p>
+                    </Link>
+                    {exam.ctaHref && exam.ctaLabel && (
+                      <div className="px-5 pb-5">
+                        <a
+                          href={exam.ctaHref}
+                          {...(!isMailto && {
+                            target: "_blank",
+                            rel: "noopener noreferrer",
+                          })}
+                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition ${
+                            isWhatsApp
+                              ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
+                              : "bg-adaBlue/10 hover:bg-adaBlue/20 text-adaBlue"
+                          }`}
+                        >
+                          {isWhatsApp && <i className="fa-brands fa-whatsapp" />}
+                          {exam.ctaLabel}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* WORKSHOP — geo-filtered to the visitor's country; visitors from
+          countries outside our known list see a combined UK + USA feed
+          instead of an empty section. */}
+      <section id="workshop-section" className="py-16 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <div className="text-xs font-bold tracking-widest text-adaBlue uppercase mb-2">
+                Learning Resources
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Dental Workshop
+              </h2>
+            </div>
+            <Link
+              href="/workshop/"
+              className="text-sm font-bold text-adaBlue hover:underline"
+            >
+              View all &rarr;
+            </Link>
+          </div>
+
+          {workshopPool.length === 0 ? (
+            <p className="text-sm text-slate-400">No workshops yet.</p>
+          ) : (
+            <HomepageCountryPreview
+              pool={workshopPool}
+              folder="workshop"
+              badgeLabel="Workshop Post"
+              fallbackCountries={["uk", "usa"]}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact-section" className="py-16 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center max-w-xl mx-auto">
+            <div className="text-xs font-bold tracking-widest text-adaBlue uppercase mb-2">
+              Get In Touch
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Contact Us
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              Reach out to Dr. Hussain Ahmad directly for queries, listings,
+              or collaboration.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <a
+              href="mailto:hussainsheen63@gmail.com"
+              className="bg-white border border-slate-200/80 rounded-xl p-6 flex items-center gap-4 hover:shadow-xl transition-all hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 rounded-full bg-adaSoftBlue flex items-center justify-center text-adaBlue text-lg flex-shrink-0">
+                <i className="fa-solid fa-envelope" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Email
+                </div>
+                <div className="text-sm font-bold text-slate-900 break-all">
+                  hussainsheen63@gmail.com
+                </div>
+              </div>
+            </a>
+            <a
+              href="https://wa.me/923433411151"
+              target="_blank"
+              rel="noopener"
+              className="bg-white border border-slate-200/80 rounded-xl p-6 flex items-center gap-4 hover:shadow-xl transition-all hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-lg flex-shrink-0">
+                <i className="fa-brands fa-whatsapp" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  WhatsApp
+                </div>
+                <div className="text-sm font-bold text-slate-900">
+                  +92 343 3411151
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
