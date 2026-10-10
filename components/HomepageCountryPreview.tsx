@@ -39,7 +39,7 @@ export default function HomepageCountryPreview({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("https://ipapi.co/json/")
+    fetch("/api/geo")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data?.country_code) return;
