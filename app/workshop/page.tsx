@@ -20,6 +20,8 @@ export default async function Page() {
       badge={section.badge}
       folder={section.folder}
       items={items}
+      enableCountryFilter
+      fallbackCountries={["uk", "usa"]}
     />
   );
 }

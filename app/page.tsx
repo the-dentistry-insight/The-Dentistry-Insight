@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SECTIONS, getPublishedList } from "@/lib/sections";
+import HomepageCountryPreview from "@/components/HomepageCountryPreview";
 
 export const revalidate = 3600; // ISR: refresh every 1 hour
 
@@ -18,13 +19,12 @@ function formatDate(d: string | null) {
 }
 
 export default async function HomePage() {
-  const jobs = await getPublishedList(SECTIONS.jobs, 6);
+  const jobsPool = await getPublishedList(SECTIONS.jobs, 30);
+  const workshopPool = await getPublishedList(SECTIONS.workshop, 30);
   const exams = await getPublishedList(SECTIONS.exams, 6);
-  const workshop = await getPublishedList(SECTIONS.workshop, 6);
 
   return (
     <>
-      {/* HERO — ported 1:1 from index.html */}
       <section className="relative bg-adaNavy text-white overflow-hidden py-16 lg:py-24 hero-bg-accent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -58,7 +58,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* QUICK CATEGORY BOXES — one-click entry into each section */}
       <section className="py-12 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -123,8 +122,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* JOBS — Server Component, rendered in raw HTML for crawlers.
-          This replaces the old client-side fetch-into-empty-div pattern. */}
       <section id="jobs-section" className="py-16 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
@@ -144,63 +141,20 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {jobs.length === 0 ? (
+          {jobsPool.length === 0 ? (
             <p className="text-sm text-slate-400">No listings yet.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map((job) => {
-                const isWhatsApp = job.ctaHref?.includes("wa.me");
-                const isMailto = job.ctaHref?.startsWith("mailto:");
-                return (
-                  <div
-                    key={job.id}
-                    className="bg-white border border-slate-200/80 rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col"
-                  >
-                    <Link href={`/jobs/${job.slug}/`} className="block p-5 pb-3 flex-1">
-                      <span className="px-2.5 py-1 bg-blue-50 text-adaBlue text-[9px] font-extrabold uppercase rounded-full tracking-wider">
-                        Job Opening
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 mt-2">
-                        {job.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-semibold mt-1">
-                        {job.subtitle}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-3">
-                        {job.summary}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-3">
-                        {formatDate(job.createdAt)}
-                      </p>
-                    </Link>
-                    {job.ctaHref && job.ctaLabel && (
-                      <div className="px-5 pb-5">
-                        <a
-                          href={job.ctaHref}
-                          {...(!isMailto && {
-                            target: "_blank",
-                            rel: "noopener noreferrer",
-                          })}
-                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition ${
-                            isWhatsApp
-                              ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
-                              : "bg-adaBlue/10 hover:bg-adaBlue/20 text-adaBlue"
-                          }`}
-                        >
-                          {isWhatsApp && <i className="fa-brands fa-whatsapp" />}
-                          {job.ctaLabel}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <HomepageCountryPreview
+              pool={jobsPool}
+              folder="jobs"
+              badgeLabel="Job Opening"
+              fallbackCountries={["uk", "usa"]}
+              limit={6}
+            />
           )}
         </div>
       </section>
 
-      {/* EXAMS */}
       <section id="exams-section" className="py-16 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
@@ -278,7 +232,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* WORKSHOP */}
       <section id="workshop-section" className="py-16 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
@@ -298,65 +251,20 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {workshop.length === 0 ? (
+          {workshopPool.length === 0 ? (
             <p className="text-sm text-slate-400">No workshops yet.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workshop.map((item) => {
-                const isWhatsApp = item.ctaHref?.includes("wa.me");
-                const isMailto = item.ctaHref?.startsWith("mailto:");
-                return (
-                  <div
-                    key={item.id}
-                    className="bg-white border border-slate-200/80 rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col"
-                  >
-                    <Link href={`/workshop/${item.slug}/`} className="block p-5 pb-3 flex-1">
-                      <span className="px-2.5 py-1 bg-blue-50 text-adaBlue text-[9px] font-extrabold uppercase rounded-full tracking-wider">
-                        Workshop Post
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 mt-2">
-                        {item.title}
-                      </h3>
-                      {item.subtitle && (
-                        <p className="text-xs text-slate-500 font-semibold mt-1">
-                          {item.subtitle}
-                        </p>
-                      )}
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-3">
-                        {item.summary}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-3">
-                        {formatDate(item.createdAt)}
-                      </p>
-                    </Link>
-                    {item.ctaHref && item.ctaLabel && (
-                      <div className="px-5 pb-5">
-                        <a
-                          href={item.ctaHref}
-                          {...(!isMailto && {
-                            target: "_blank",
-                            rel: "noopener noreferrer",
-                          })}
-                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition ${
-                            isWhatsApp
-                              ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
-                              : "bg-adaBlue/10 hover:bg-adaBlue/20 text-adaBlue"
-                          }`}
-                        >
-                          {isWhatsApp && <i className="fa-brands fa-whatsapp" />}
-                          {item.ctaLabel}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <HomepageCountryPreview
+              pool={workshopPool}
+              folder="workshop"
+              badgeLabel="Workshop Post"
+              fallbackCountries={["uk", "usa"]}
+              limit={6}
+            />
           )}
         </div>
       </section>
 
-      {/* CONTACT */}
       <section id="contact-section" className="py-16 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center max-w-xl mx-auto">

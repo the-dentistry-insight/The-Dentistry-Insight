@@ -4,84 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { NormalizedItem } from "@/lib/sections";
-
-// Same curated keyword groups as the original static site, so "Karachi,
-// Pakistan" or "Al Sharjah, UAE" match the right dropdown option even when
-// admins don't type the country name consistently.
-const COUNTRY_KEYWORDS: Record<string, string[]> = {
-  pakistan: [
-    "pakistan", "karachi", "lahore", "islamabad", "rawalpindi", "faisalabad", "multan", "peshawar",
-    "quetta", "sialkot", "gujranwala", "sargodha", "rawat", "sadiqabad", "bahawalpur", "sukkur",
-    "larkana", "sheikhupura", "jhang", "rahim yar khan", "gujrat", "kasur", "mardan", "mingora",
-    "nawabshah", "sahiwal", "okara", "wah cantonment", "wah cantt", "dera ghazi khan", "dg khan",
-    "mirpur khas", "kohat", "hyderabad", "abbottabad", "muzaffarabad", "gilgit", "skardu",
-    "chiniot", "kamoke", "hafizabad", "burewala", "jacobabad", "attock", "vehari", "chakwal",
-    "mandi bahauddin", "jhelum", "toba tek singh", "layyah", "muzaffargarh", "khanewal", "kot addu",
-    "nowshera", "charsadda", "swat", "bannu", "dera ismail khan", "bahawalnagar", "daska", "gojra",
-    "pattoki", "shikarpur", "khairpur", "dadu", "sanghar", "badin", "tando adam", "mirpur azad kashmir",
-    "kotli", "chishtian", "ghotki",
-  ],
-  usa: [
-    "usa", "u.s.a", "united states", "america", "u.s.", "new york", "los angeles", "chicago",
-    "houston", "phoenix", "philadelphia", "san antonio", "san diego", "dallas", "san jose",
-    "austin", "jacksonville", "fort worth", "columbus", "charlotte", "san francisco", "indianapolis",
-    "seattle", "denver", "washington", "boston", "nashville", "detroit", "portland", "memphis",
-    "las vegas", "louisville", "baltimore", "milwaukee", "albuquerque", "tucson", "fresno",
-    "sacramento", "atlanta", "miami", "oakland", "minneapolis", "tulsa", "cleveland", "wichita",
-    "arlington", "california", "texas", "florida", "ohio", "georgia", "michigan", "virginia",
-    "new jersey", "north carolina",
-  ],
-  indonesia: [
-    "indonesia", "jakarta", "surabaya", "bandung", "medan", "semarang", "makassar", "palembang",
-    "depok", "tangerang", "bekasi", "bali", "denpasar", "yogyakarta", "malang", "bogor",
-  ],
-  uae: [
-    "uae", "u.a.e", "united arab emirates", "dubai", "sharjah", "abu dhabi", "ajman",
-    "ras al khaimah", "fujairah", "umm al quwain", "al ain",
-  ],
-  "saudi arabia": [
-    "saudi", "ksa", "riyadh", "jeddah", "mecca", "makkah", "medina", "madinah", "dammam",
-    "khobar", "al khobar", "taif", "tabuk", "abha", "jubail", "yanbu", "najran", "hail", "buraidah",
-  ],
-  australia: [
-    "australia", "sydney", "melbourne", "brisbane", "perth", "adelaide", "gold coast",
-    "canberra", "newcastle nsw", "hobart", "darwin",
-  ],
-  qatar: ["qatar", "doha", "al rayyan", "al wakrah", "umm salal"],
-  uk: [
-    "uk", "u.k", "united kingdom", "england", "london", "scotland", "wales", "britain",
-    "great britain", "manchester", "birmingham", "liverpool", "leeds", "glasgow", "edinburgh",
-    "bristol", "sheffield", "cardiff", "belfast", "newcastle upon tyne", "nottingham", "leicester",
-  ],
-};
-
-const COUNTRY_LABELS: Record<string, string> = {
-  pakistan: "Pakistan",
-  usa: "USA",
-  indonesia: "Indonesia",
-  uae: "UAE",
-  "saudi arabia": "Saudi Arabia",
-  australia: "Australia",
-  qatar: "Qatar",
-  uk: "UK",
-  other: "Other",
-};
-
-const COUNTRY_CODE_MAP: Record<string, string> = {
-  PK: "pakistan", US: "usa", ID: "indonesia", AE: "uae",
-  SA: "saudi arabia", AU: "australia", QA: "qatar", GB: "uk",
-};
-
-function itemMatchesCountry(item: NormalizedItem, countryKey: string): boolean {
-  const text = `${item.subtitle || ""} ${item.title || ""}`.toLowerCase();
-  if (countryKey === "other") {
-    return !Object.values(COUNTRY_KEYWORDS).some((words) =>
-      words.some((w) => text.includes(w))
-    );
-  }
-  const words = COUNTRY_KEYWORDS[countryKey] || [countryKey];
-  return words.some((w) => text.includes(w));
-}
+import {
+  COUNTRY_KEYWORDS,
+  COUNTRY_LABELS,
+  COUNTRY_CODE_MAP,
+  itemMatchesCountry,
+  itemMatchesAnyCountry,
+} from "@/lib/countryFilter";
 
 function PlainGrid({
   items,
@@ -163,13 +92,15 @@ function CountryFilterGrid({
   items,
   folder,
   badge,
+  fallbackCountries,
 }: {
   items: NormalizedItem[];
   folder: string;
   badge: string;
+  fallbackCountries?: string[];
 }) {
-  // Defaults to Pakistan, same as the original site, until geo-IP resolves.
   const [selectedCountry, setSelectedCountry] = useState<string>("pakistan");
+  const [autoFallback, setAutoFallback] = useState<string[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -177,33 +108,45 @@ function CountryFilterGrid({
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data?.country_code) return;
-        const key = COUNTRY_CODE_MAP[data.country_code] || "other";
-        setSelectedCountry(key);
+        const key = COUNTRY_CODE_MAP[data.country_code];
+        if (key) {
+          setSelectedCountry(key);
+        } else if (fallbackCountries && fallbackCountries.length) {
+          setSelectedCountry(fallbackCountries[0]);
+          setAutoFallback(fallbackCountries);
+        } else {
+          setSelectedCountry("other");
+        }
       })
-      .catch(() => {
-        // Geo-detection unavailable (blocked/offline) — stays on Pakistan default.
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fallbackCountries]);
 
   const countryOptions = useMemo(
     () => [...Object.keys(COUNTRY_KEYWORDS), "other"],
     []
   );
 
-  const filteredItems = useMemo(
-    () => items.filter((item) => itemMatchesCountry(item, selectedCountry)),
-    [items, selectedCountry]
-  );
+  const filteredItems = useMemo(() => {
+    if (autoFallback) {
+      return items.filter((item) => itemMatchesAnyCountry(item, autoFallback));
+    }
+    return items.filter((item) => itemMatchesCountry(item, selectedCountry));
+  }, [items, selectedCountry, autoFallback]);
+
+  function handleSelect(value: string) {
+    setAutoFallback(null);
+    setSelectedCountry(value);
+  }
 
   return (
     <>
       <div className="mb-6">
         <select
           value={selectedCountry}
-          onChange={(e) => setSelectedCountry(e.target.value)}
+          onChange={(e) => handleSelect(e.target.value)}
           className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:border-adaBlue transition focus:outline-none focus:ring-2 focus:ring-adaBlue/30"
         >
           {countryOptions.map((key) => (
@@ -232,6 +175,7 @@ export default function SectionHub({
   folder,
   items,
   enableCountryFilter = false,
+  fallbackCountries,
 }: {
   title: string;
   intro: string;
@@ -239,6 +183,7 @@ export default function SectionHub({
   folder: string;
   items: NormalizedItem[];
   enableCountryFilter?: boolean;
+  fallbackCountries?: string[];
 }) {
   return (
     <>
@@ -265,7 +210,12 @@ export default function SectionHub({
               Nothing published here yet — check back soon.
             </p>
           ) : enableCountryFilter ? (
-            <CountryFilterGrid items={items} folder={folder} badge={badge} />
+            <CountryFilterGrid
+              items={items}
+              folder={folder}
+              badge={badge}
+              fallbackCountries={fallbackCountries}
+            />
           ) : (
             <PlainGrid items={items} folder={folder} badge={badge} />
           )}
