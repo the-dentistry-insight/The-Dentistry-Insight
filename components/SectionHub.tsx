@@ -104,7 +104,7 @@ function CountryFilterGrid({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("https://ipapi.co/json/")
+    fetch("/api/geo")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data?.country_code) return;
@@ -147,7 +147,7 @@ function CountryFilterGrid({
         <select
           value={selectedCountry}
           onChange={(e) => handleSelect(e.target.value)}
-          className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:border-adaBlue transition focus:outline-none focus:ring-2 focus:ring-adaBlue/30"
+          className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:border-adaBlue transition focus:outline-none focus:ring-2 focus:ring-adaBlue/[...]
         >
           {countryOptions.map((key) => (
             <option key={key} value={key}>
